@@ -7,10 +7,12 @@ import(
     "encoding/json"
     "gopkg.in/mgo.v2"
     "gopkg.in/mgo.v2/bson"
-    "github.com/dgrijalva/jwt-go"
 
     "server_auth/models"
     "server_auth/db"
+    "server_auth/services"
+    "server_auth/util"
+
     "time"
 )
 
@@ -24,7 +26,7 @@ func NewAuthenticatorController() *AuthenticatorController{
     return &AuthenticatorController{db.NewSession()}
 }
 
-func (auth * AuthenticatorController) Authenticate(respWriter http.ResponseWriter, req *http.Request) {
+func (auth * AuthenticatorController) GenerateAuthenticate(respWriter http.ResponseWriter, req *http.Request) {
 
     decoder := json.NewDecoder(req.Body)
 
@@ -34,14 +36,19 @@ func (auth * AuthenticatorController) Authenticate(respWriter http.ResponseWrite
         log.Fatal(err)
     }
 
-    user.Id = bson.NewObjectId()
-
     if err := auth.session.DB("server_auth").C("users").Find(bson.M{"email": user.Email , "senha":user.Senha}).One(&user); err != nil {
         respWriter.WriteHeader(404)
         return
     }
 
-    tokenString, err := generateToken()
+    options := util.Options{
+        SigningMethod: "HS256",
+        PrivateKey:    "darthvader",
+        PublicKey:     "teste",
+        Expiration:    60 * time.Minute,
+    }
+
+    tokenString, err := services.GenerateJWTToken(string(user.Id),options)
     if err!=nil{
         panic(err)
     }
@@ -54,47 +61,4 @@ func (auth * AuthenticatorController) Authenticate(respWriter http.ResponseWrite
     fmt.Fprintf(respWriter, "%s", userJ)
  }
 
-
-func generateToken() (string,error){
-    token := jwt.New(jwt.SigningMethodRS512)
-    token.Claims["exp"] = time.Now()
-    token.Claims["iat"] = time.Now()
-    token.Claims["sub"] = "danielteste"
-    tokenString, err := token.SignedString("vasco")
-    if err != nil {
-        panic(err)
-        return "", err
-    }
-
-    return tokenString,nil
-
-}
-
-func (auth * AuthenticatorController) Find(respWriter http.ResponseWriter, req *http.Request) {
-
-    decoder := json.NewDecoder(req.Body)
-
-    user:= models.User{}
-    err := decoder.Decode(&user)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    user.Id = bson.NewObjectId()
-
-    if err := auth.session.DB("server_auth").C("users").Find(bson.M{"email": user.Email}).One(&user); err != nil {
-        respWriter.WriteHeader(404)
-        return
-    }
-
-    userJ,_:= json.Marshal(user)
-    fmt.Println(user.Email)
-    fmt.Println(user.Senha)
-    fmt.Println(user.Token)
-    fmt.Println(string(userJ))
-
-    respWriter.Header().Set("Content-Type", "application/json")
-    respWriter.WriteHeader(200)
-    fmt.Fprintf(respWriter, "%s", userJ)
- }
 

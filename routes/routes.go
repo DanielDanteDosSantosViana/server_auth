@@ -9,7 +9,15 @@ import(
 
 func InitRoutes( router * mux.Router ){
     auth:= controllers.NewAuthenticatorController()
-    router.HandleFunc("/mwebauth/authentication",auth.Authenticate).Methods("POST")
+    user:= controllers.NewUserController()
+
+
+    //generate tooken
+    router.HandleFunc("/mwebauth/authentication",auth.GenerateAuthenticate).Methods("POST")
+
+    //create users
+    router.HandleFunc("/mwebauth/users/{email}",user.Create).Methods("POST")
+
 }
 
 
