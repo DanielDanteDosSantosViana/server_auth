@@ -16,7 +16,7 @@ func InitRoutes( router * mux.Router ){
     router.HandleFunc("/mwebauth/authentication",auth.GenerateAuthenticate).Methods("POST")
 
     //create users
-    router.HandleFunc("/mwebauth/users/{email}",user.Create).Methods("POST")
+    router.HandleFunc("/mwebauth/user",user.Create).Methods("POST")
 
 }
 
