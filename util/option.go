@@ -11,4 +11,9 @@ type(
         PublicKey     string
         Expiration    time.Duration
   }
+
 )
+
+func NewOptions() *Options{
+    return &Options{"HS256","darthvader","teste",60 * time.Minute}
+}

@@ -15,7 +15,7 @@ import(
 )
 
 
-func GenerateJWTToken(userId string, op util.Options) (string, error) {
+func GenerateJWTToken(userId string, op *util.Options) (string, error) {
     t := jwt.New(jwt.GetSigningMethod(op.SigningMethod))
 
     now := time.Now()
@@ -32,12 +32,20 @@ func GenerateJWTToken(userId string, op util.Options) (string, error) {
 
 }
 
-/*
-func ValidateJWTToken() (string, error) {
+func ValidateJWTToken(tokenValue string) (error) {
+ token, err := jwt.Parse(tokenValue, func(token *jwt.Token) (interface{}, error) {
+      return []byte(util.NewOptions().PrivateKey), nil
+  })
 
+ if err!=nil{
+      logError("ERROR: ValidateJWTToken: %v\n", err)
+
+ }
+      logError("ERROR: TOKEN: %v\n", token)
+
+ return err
 
 }
-*/
 
 func logError(format string, err interface{}) {
   if err != nil {
