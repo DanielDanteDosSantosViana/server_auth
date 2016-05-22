@@ -27,7 +27,6 @@ func (receiver * PacketReceiverHTTPController) ReceivedPacket(respWriter http.Re
     json.Unmarshal(bytes, &requestData)
 
     token:=requestData[len(requestData)-1].Value
-    fmt.Printf(token)
     if token!=""{
         err := services.ValidateJWTToken(token)
         if err!=nil{
@@ -35,9 +34,15 @@ func (receiver * PacketReceiverHTTPController) ReceivedPacket(respWriter http.Re
             respWriter.WriteHeader(http.StatusUnauthorized)
             fmt.Fprintln(respWriter, "WHAT? Invalid Token!")
         }else{
+
+            sender:=services.NewSenderHTTP()
+
+            go sender.Send("http://localhost:5000/receiver_server/receiver","POST",bytes)
+
             respWriter.Header().Set("Content-Type", "application/json")
             respWriter.WriteHeader(200)
             fmt.Fprintf(respWriter, "%s", "OK")
+
         }
     }else{
         respWriter.Header().Set("Content-Type", "application/json")
